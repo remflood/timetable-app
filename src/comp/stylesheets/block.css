@@ -6,3 +6,13 @@
     align-items: center;
     justify-content: center;
 }
+
+.highlight {
+    width: 7.5rem;
+    height: 2.5rem;
+    border: 0.5px solid grey;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: aquamarine;
+}
