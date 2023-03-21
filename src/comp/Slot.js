@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import Blocke from './Blocke';
+import Block from './Block';
 import Float from './Float';
 
 export default function Slot(){
@@ -108,7 +108,7 @@ export default function Slot(){
     return (
         <div className="Slot">
             {subjectArray.map((value, index) => {
-                return <Blocke helpers={helpers} sub={value} blockId={index}/>;
+                return <Block helpers={helpers} sub={value} blockId={index}/>;
             })}
             {subject !== "" ? <Float helpers={helpers} sub={subject} coord={coord.current}/> : null}
         </div>
