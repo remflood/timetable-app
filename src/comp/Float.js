@@ -1,16 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
 import './stylesheets/subject.css'
 
-export default function Float({helpers, sub, coord}){
+export default function Float({calOverlap, placeSubject, sub, coord}){
 
     let subject = null;
     function getRef(element){
-        subject = element;
+        if(element !== null){
+            subject = element;
+        }
     }
 
     function onMouseMove(event) {
+        event.preventDefault();
         moveAt(event.pageX, event.pageY);
-        helpers.compare(subject,{x: event.pageX, y: event.pageY});
+        calOverlap(subject, {x: event.pageX, y: event.pageY});
     }
 
     function moveAt(pageX, pageY) {
@@ -19,12 +22,11 @@ export default function Float({helpers, sub, coord}){
     }
 
     let onMouseUp = function() {
-        helpers.placeSubject();
+        placeSubject();
     };
     
     useEffect(() => {
         if(subject !== null){
-            console.log("Check");
             subject.style.position = 'absolute';
             subject.style.left = coord.x - subject.offsetWidth / 2 + 'px';
             subject.style.top = coord.y - subject.offsetHeight / 2 + 'px';

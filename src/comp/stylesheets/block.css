@@ -1,18 +1,14 @@
 .block {
-    width: 7.5rem;
-    height: 2.5rem;
+    width: 9rem;
+    height: 1.5rem;
     border: 0.5px solid grey;
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
 }
 
 .highlight {
-    width: 7.5rem;
-    height: 2.5rem;
-    border: 0.5px solid grey;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: aquamarine;
+    background-color: rgb(88, 180, 255);
 }
+
