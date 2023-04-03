@@ -1,3 +1,5 @@
+import { NUMBER_OF_SLOTS } from "./global";
+
 export function isOverlapping(a,b){
     return !(a.getBoundingClientRect().top > b.getBoundingClientRect().bottom ||
                 a.getBoundingClientRect().right < b.getBoundingClientRect().left ||
@@ -14,6 +16,24 @@ export function getOverlapPercentage(a,b){
     let m = a.getBoundingClientRect().width - z;
     let n = a.getBoundingClientRect().height - v;
     return (m*n)/allArea * 100
+}
+
+export function generateBlocks(dayName, blocksPerSlot) {
+    
+    let arr = [];
+    for(let i = 0; i < NUMBER_OF_SLOTS; i++){
+        for(let j = 0; j < blocksPerSlot; j++){
+            let block = {
+                day: dayName,
+                slot: i,
+                id: j,
+                subject: "",
+                isHigh: false,
+            }
+            arr.push(block);
+        }
+    }
+    return arr;
 }
 
 export function createSpace(index,arr){

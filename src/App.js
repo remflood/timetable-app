@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import './App.css';
 import Day from './comp/Day';
 import Float from './comp/Float';
-import {getOverlapPercentage, isOverlapping, createSpace} from './comp/helpers/functions';
+import {getOverlapPercentage, isOverlapping, createSpace, generateBlocks} from './comp/helpers/functions';
 import { DayClass } from './comp/classes/DayClass';
 import { SubClass } from './comp/classes/SubClass';
 import Menu from './comp/Menu';
@@ -12,17 +12,23 @@ import SlotForm from './comp/SlotForm';
 
 function App() {
 
-  const OVERLAP_THRESHOLD = 50; 
+  const OVERLAP_THRESHOLD = 50;
   const [floatSubject, setFloatSubject] = useState("");
   const [daysArray, setDaysArray] = useState([]);
+  
   const [showMenu, setShowMenu] = useState({show: false, showRemove: false});
   const [subjectsList, setSubjectsList] = useState([]);
   const [showSlotMenu, setShowSlotMenu] = useState({show: false, data: null})
 
   const days = useRef([]);
   let subjectsArray = useRef([]);
+
+  if(daysArray.length !== 0){
+    console.log("Current daysArray: " + daysArray[0].blocks[0].subject);
+  }
   
-  let blocks = new Map();
+  // let blocks = new Map();
+  let blocks = [];
   let dayElements = [];
   let func = [];
   let oldVersion = useRef([]);
@@ -32,89 +38,157 @@ function App() {
   const countClick = useRef(0);
   const blockActive = useRef(null);
 
-  function calOverlap(a, cord){
-    
-    let currentDay = -1;
-    dayElements.forEach((element, index) => {
-      if(isOverlapping(a,element)){
-        currentDay = index;
-        return;
-      }
-    });
+  function calOverlap(a){
 
-    blocks.forEach((block, key, map) => {
-      if(key.day === currentDay && isOverlapping(a, block.elem)){
-        //When floater is hovering above
-        if(getOverlapPercentage(a, block.elem) > OVERLAP_THRESHOLD && !block.isActive){
-          block.setState(true);
-          block.isActive = true;
-          if(block.subject !== ""){ //if block has subject
-            let newDayArray = [...days.current[key.day].getArr()]; 
-              if(createSpace(block.id, newDayArray)){
-                coord.current = cord;
-                let newArray = JSON.parse(JSON.stringify(daysArray));
-                newArray[key.day] = newDayArray;
-                setDaysArray(newArray);
-              }
-          }
-        } else if(getOverlapPercentage(a,block.elem) < OVERLAP_THRESHOLD && block.isActive) { //block already active
-            block.isActive = false;
-            block.setState(false);
-            coord.current = cord;
-            let newArray = JSON.parse(JSON.stringify(daysArray));
-            newArray = oldVersionBlank.current;
-            setDaysArray(newArray);
-        }
-      } else if(block.isActive){
-          block.isActive = false;
-          block.setState(false);
+    let activeDay = "";
+
+    for(let dayElem of dayElements){
+      if(isOverlapping(a,dayElem)){
+        activeDay = dayElem.getAttribute("day");
+        //dayElem get child div. (Future)
+        break;
       }
-    });
+    }
+
+    for(let blockElem of blocks){
+      if(blockElem.getAttribute("day") === activeDay && isOverlapping(a, blockElem)){
+        if(getOverlapPercentage(a,blockElem) > OVERLAP_THRESHOLD && blockElem.getAttribute("class") !== "block highlight"){
+          let newDaysArray = JSON.parse(JSON.stringify(daysArray));
+          for(let day in newDaysArray){
+            if(newDaysArray[day].blocks[0].day === activeDay){
+              let blocks = newDaysArray[day].blocks;
+              for (let index in blocks){
+                let slot = blockElem.getAttribute("slot");
+                let id = blockElem.getAttribute("id");
+                if(blocks[index].slot == slot && blocks[index].id == id){
+                  blocks[index].isHigh = true;
+                  if(blocks[index].subject !== ""){
+                    let filtered = blocks.filter(block => block.slot == slot);
+                    let arr = [];
+                    filtered.forEach(block => {
+                      arr.push(block.subject);
+                    });
+                    arr = createSpace(blocks[index].id, arr);
+                    blocks.forEach((block, index) => {
+                      if(block.slot == slot){
+                        block.subject = arr[index];
+                      }
+                    });
+                  }
+                  setDaysArray(newDaysArray);
+                  break;
+                }
+              }
+            }
+          }
+          
+        }else if(getOverlapPercentage(a,blockElem) < OVERLAP_THRESHOLD && blockElem.getAttribute("class") === "block highlight"){
+          let newDaysArray = JSON.parse(JSON.stringify(daysArray));
+          newDaysArray.forEach(day => {
+            if(day.blocks[0].day === activeDay){
+              let blocks = day.blocks;
+              blocks.forEach(block => {
+                let slot = blockElem.getAttribute("slot");
+                let id = blockElem.getAttribute("id");
+                if(block.slot == slot && block.id == id){
+                  block.isHigh = false;
+                }
+              });
+            }
+          });
+          setDaysArray(newDaysArray);
+        }
+      }
+    }
+
+    // blocks.forEach((block, key, map) => {
+    //   if(key.day === currentDay && isOverlapping(a, block.elem)){
+    //     //When floater is hovering above
+    //     if(getOverlapPercentage(a, block.elem) > OVERLAP_THRESHOLD && !block.isActive){
+    //       block.setState(true);
+    //       block.isActive = true;
+    //       if(block.subject !== ""){ //if block has subject
+    //         let newDayArray = [...days.current[key.day].getArr()]; 
+    //           if(createSpace(block.id, newDayArray)){
+    //             coord.current = cord;
+    //             let newArray = JSON.parse(JSON.stringify(daysArray));
+    //             newArray[key.day] = newDayArray;
+    //             setDaysArray(newArray);
+    //           }
+    //       }
+    //     } else if(getOverlapPercentage(a,block.elem) < OVERLAP_THRESHOLD && block.isActive) { //block already active
+    //         block.isActive = false;
+    //         block.setState(false);
+    //         coord.current = cord;
+    //         let newArray = JSON.parse(JSON.stringify(daysArray));
+    //         newArray = oldVersionBlank.current;
+    //         setDaysArray(newArray);
+    //     }
+    //   } else if(block.isActive){
+    //       block.isActive = false;
+    //       block.setState(false);
+    //   }
+    // });
   }
 
   function addBlock(index, obj, day){
     blocks.set({day: day, id: index}, obj);
   }
 
-  function createFloat(subjectName, dayIndex, blockId, cord){
+  function createFloat(block, cord){
+    
     coord.current = cord;
-    DayClass._currentIndexActive = dayIndex;
-    // days.current[dayIndex].setBlankSpace(blockId);
-    // const newArray = JSON.parse(JSON.stringify(daysArray));
-    // newArray[dayIndex] = [...days.current[dayIndex].getArr()];
-    // setDaysArray(newArray);
-
     oldVersion.current = JSON.parse(JSON.stringify(daysArray));
-    const newArray = JSON.parse(JSON.stringify(daysArray));
-    newArray[dayIndex][blockId] = "";
-    days.current[dayIndex].setBlankSpace(blockId);
-    oldVersionBlank.current = JSON.parse(JSON.stringify(newArray));
-    setDaysArray(newArray);
-    setFloatSubject(subjectName);
+    let newDaysArray = JSON.parse(JSON.stringify(daysArray));
+    let isFound = false;
+    for(let day of newDaysArray){
+      if(day.blocks[0].day === block.day){
+        isFound = true;
+        for(let blk of day.blocks){
+          if(blk.slot == block.slot && blk.id == block.id){
+            blk.subject = "";
+            break;
+          }
+        }
+      }
+      if(isFound){
+        setDaysArray(newDaysArray);
+        break;
+      }
+    }
+    setFloatSubject(block.subject);
   }
 
   function placeSubject(){
-    //Check if any block is active/highlighted
+    //Check if any block is found highlighted
+    console.log("placeSubject: " + daysArray[0].blocks[0].subject);
     let foundActive = false;
-    blocks.forEach((block, key) => {
-        if(block.isActive){
-            days.current[key.day].getArr()[block.id] = floatSubject;
-            let newArray = JSON.parse(JSON.stringify(daysArray));
-            newArray[key.day] = [...days.current[key.day].getArr()];
-            // const newArray = JSON.parse(JSON.stringify(daysArray));
-            // newArray[key.day][block.id] = floatSubject;
-            setDaysArray(newArray);
-            block.setState(false);
-            foundActive = true;
-            return;
-        }
-    });
-    //if no block active, return subject to its original block
+    for(let blockElem of blocks){
+      if(blockElem.getAttribute("class") === "block highlight"){
+        let slot = blockElem.getAttribute("slot");
+        let id = blockElem.getAttribute("id");
+        foundActive = true;
+        let newDaysArray = JSON.parse(JSON.stringify(daysArray));
+          newDaysArray.forEach(day => {
+            if(day.blocks[0].day === blockElem.getAttribute("day")){
+              let blocks = day.blocks;
+              for(let block of blocks){
+                if(block.slot == slot && block.id == id){
+                  block.isHigh = false;
+                  block.subject = floatSubject;
+                  break;
+                }
+              }
+            }
+          });
+          setDaysArray(newDaysArray);
+          if(foundActive)
+            break;
+      }
+    }
+
     if(!foundActive){
-        let newArray = JSON.parse(JSON.stringify(daysArray));
-        // const dayIndex = DayClass._currentIndexActive;
-        newArray = oldVersion.current;
-        setDaysArray(newArray);
+      setDaysArray(oldVersion.current);
     }
     setFloatSubject("");
   }
@@ -269,30 +343,41 @@ function App() {
 
     window.addEventListener("contextmenu", e => e.preventDefault());
 
-    if(days.current.length === 0){
-      days.current.push(new DayClass("Monday"));
-      days.current.push(new DayClass("Tuesday"));
-      days.current.push(new DayClass("Wednesday"));
-      days.current.push(new DayClass("Thursday"));
-      days.current.push(new DayClass("Friday"));
-      days.current.push(new DayClass("Saturday"));
-      days.current[0].addSubject("Physics",2);
-      days.current[0].addSubject("Chemistry",0);
-      days.current[1].addSubject("Biology",0);
-      days.current[1].addSubject("Law",1);
-      const newArray = [];
-      days.current.forEach(day => {
-        newArray[day.getIndex()] = day.getArr();
-      });
-      setDaysArray(newArray);
+    blocks = document.getElementsByClassName("block");
+    dayElements = document.getElementsByClassName("day");
+    // if(days.current.length === 0){
+    //   days.current.push(new DayClass("Monday"));
+    //   days.current.push(new DayClass("Tuesday"));
+    //   days.current.push(new DayClass("Wednesday"));
+    //   days.current.push(new DayClass("Thursday"));
+    //   days.current.push(new DayClass("Friday"));
+    //   days.current.push(new DayClass("Saturday"));
+    //   days.current[0].addSubject("Physics",2);
+    //   days.current[0].addSubject("Chemistry",0);
+    //   days.current[1].addSubject("Biology",0);
+    //   days.current[1].addSubject("Law",1);
+    //   const newArray = [];
+    //   days.current.forEach(day => {
+    //     newArray[day.getIndex()] = day.getArr();
+    //   });
+    //   setDaysArray(newArray);
+    // }
+
+    // daysArray.forEach((value, index) => {
+    //   dayElements.push(document.getElementById(index));
+    // });
+
+    if(daysArray.length === 0){
+      let monday = {blocks: generateBlocks("Monday", 5)};
+      let tuesday = {blocks: generateBlocks("Tuesday", 5)};
+      monday.blocks[0].subject = "Law";
+      monday.blocks[1].subject = "Physics";
+      const newDaysArray = [monday, tuesday];
+      setDaysArray(newDaysArray);
     }
 
-    daysArray.forEach((value, index) => {
-      dayElements.push(document.getElementById(index));
-    });
-
     return () => {
-      dayElements = [];
+      // dayElements = [];
       window.removeEventListener("contextmenu", e => e.preventDefault());
     }
   });
@@ -300,13 +385,15 @@ function App() {
   return (
     <div className="App">
       {showSlotMenu.show ? <SlotForm func={func} data={showSlotMenu.data}/> : null}
+
+      {daysArray.map(day => {
+        return <Day day={day} func={func} />
+      })}
+
       {/* <SubjectForm func={func}/> */}
-      {daysArray.map((value, index) => {
-                return <Day arr={value} func={func} dayIndex={index} day={days.current[index]}/>;
-            })}
       {floatSubject !== "" ? <Float calOverlap={calOverlap} placeSubject={placeSubject} 
         sub={floatSubject} coord={coord.current}/> : null}
-      {showMenu.show ? <Menu pos={menuPos.current} subjects={subjectsList} func={func} showRemove={showMenu.showRemove}/> : null}
+      {/* {showMenu.show ? <Menu pos={menuPos.current} subjects={subjectsList} func={func} showRemove={showMenu.showRemove}/> : null} */}
     </div>
   );
 }

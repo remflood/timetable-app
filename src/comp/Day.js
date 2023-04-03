@@ -1,39 +1,25 @@
 import { useEffect, useState } from "react";
+import Block from "./Block";
+import { NUMBER_OF_SLOTS } from "./helpers/global";
 import Slot from "./Slot";
 import './stylesheets/day.css'
 
-export default function Day({arr, func, dayIndex, day}){
+export default function Day({day, func}){
 
     let slots = [];
-    const blocksPerSlot = day.getBlocksPerSlot();
-    const numberofSlots = day.getNumberOfSlots();
-
-
-    for(let i = 0; i < numberofSlots; i++){
-        slots.push(<Slot startIndex={(blocksPerSlot)*i} array={arr.slice(i*(blocksPerSlot),(blocksPerSlot)*(i+1))} 
-            func={func} day={dayIndex} blocksPerSlot={blocksPerSlot}/>);
+    let blocks = [];
+    for(let i = 0; i < NUMBER_OF_SLOTS; i++){
+        slots.push(
+            <Slot blocks={day.blocks.filter(block => block.slot === i)} func={func} />
+        );
     }
-
-    function onMouseDown(e){
-        e.preventDefault();
-        func.openSlotMenu(dayIndex);
-    }
-
 
     useEffect(() => {
-        const elem = document.getElementById("d"+dayIndex);
-        if(elem !== null){
-            elem.addEventListener('mousedown',onMouseDown);
-        }
 
-        return () => {
-            elem.addEventListener('mousedown',onMouseDown);
-        }
     });
     
     return (
-        <div id={dayIndex}  className="day">
-            <div id={"d"+dayIndex} className="name">{day.getName()}</div>
+        <div day={day.blocks[0].day} className="day">
             {slots}
         </div>
     );
